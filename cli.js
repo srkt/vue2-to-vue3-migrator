@@ -12,13 +12,13 @@ const { transformComponent } = require(’../src/transformer’);
 
 const pkg = require(’../package.json’);
 
-// ─── Banner ─────────────────────────────────────────────────────────────────
+// — Banner —————————————————————–
 
 function printBanner() {
-console.log(chalk.cyan(`╔══════════════════════════════════════════════════════╗ ║        Vue 2 → Vue 3 Migration Tool  v${pkg.version}         ║ ║   Class Components → Composition API (TypeScript)    ║ ╚══════════════════════════════════════════════════════╝`));
+console.log(chalk.cyan(`+------------------------------------------------------+ |        Vue 2 → Vue 3 Migration Tool  v${pkg.version}         | |   Class Components → Composition API (TypeScript)    | +------------------------------------------------------+`));
 }
 
-// ─── File helpers ────────────────────────────────────────────────────────────
+// — File helpers ————————————————————
 
 function backupFile(filePath) {
 const backupPath = filePath + ‘.vue2.bak’;
@@ -44,9 +44,9 @@ fs.writeFileSync(filePath, output, ‘utf-8’);
 return { skipped: false, output, warnings };
 }
 
-// ─── Commands ────────────────────────────────────────────────────────────────
+// — Commands ––––––––––––––––––––––––––––––––
 
-// ── migrate all ──────────────────────────────────────────────────────────────
+// – migrate all –––––––––––––––––––––––––––––––
 program
 .command(‘all <dir>’)
 .description(‘Migrate all .vue files in a directory (recursively)’)
@@ -59,7 +59,7 @@ printBanner();
 ```
 const absDir = path.resolve(dir);
 if (!fs.existsSync(absDir)) {
-  console.error(chalk.red(`✖ Directory not found: ${absDir}`));
+  console.error(chalk.red(`[ERR] Directory not found: ${absDir}`));
   process.exit(1);
 }
 
@@ -107,18 +107,18 @@ for (const file of files) {
 spinner.succeed('Done!\n');
 
 // Summary
-console.log(chalk.bold('─── Summary ─────────────────────────────────────'));
-console.log(chalk.green(`  ✔ Migrated : ${results.migrated}`));
-console.log(chalk.gray(`  ⊘ Skipped  : ${results.skipped}`));
-if (results.errors) console.log(chalk.red(`  ✖ Errors   : ${results.errors}`));
+console.log(chalk.bold('--- Summary -------------------------------------'));
+console.log(chalk.green(`  [OK] Migrated : ${results.migrated}`));
+console.log(chalk.gray(`  [-] Skipped  : ${results.skipped}`));
+if (results.errors) console.log(chalk.red(`  [ERR] Errors   : ${results.errors}`));
 console.log('');
 
 if (allWarnings.length) {
-  console.log(chalk.yellow('─── Warnings / Manual Review Needed ─────────────'));
+  console.log(chalk.yellow('--- Warnings / Manual Review Needed -------------'));
   for (const { file, warnings } of allWarnings) {
     console.log(chalk.bold(`  ${file}`));
     for (const w of warnings) {
-      console.log(chalk.yellow(`    ⚠ ${w}`));
+      console.log(chalk.yellow(`    [!] ${w}`));
     }
   }
   console.log('');
@@ -131,7 +131,7 @@ if (options.dryRun) {
 
 });
 
-// ── migrate one ──────────────────────────────────────────────────────────────
+// – migrate one –––––––––––––––––––––––––––––––
 program
 .command(‘file <filepath>’)
 .description(‘Migrate a single .vue file’)
@@ -144,7 +144,7 @@ printBanner();
 ```
 const absPath = path.resolve(filepath);
 if (!fs.existsSync(absPath)) {
-  console.error(chalk.red(`✖ File not found: ${absPath}`));
+  console.error(chalk.red(`[ERR] File not found: ${absPath}`));
   process.exit(1);
 }
 
@@ -158,38 +158,38 @@ try {
   const result = processFile(absPath, options);
 
   if (result.skipped) {
-    console.log(chalk.yellow(`⊘ Skipped: ${result.reason}`));
+    console.log(chalk.yellow(`[-] Skipped: ${result.reason}`));
     return;
   }
 
   if (options.print || options.dryRun) {
-    console.log(chalk.bold('─── Transformed Output ──────────────────────────'));
+    console.log(chalk.bold('--- Transformed Output --------------------------'));
     console.log(result.output);
-    console.log(chalk.bold('─────────────────────────────────────────────────\n'));
+    console.log(chalk.bold('-------------------------------------------------\n'));
   }
 
   if (!options.dryRun) {
-    console.log(chalk.green('✔ File migrated successfully!'));
+    console.log(chalk.green('[OK] File migrated successfully!'));
     if (options.backup !== false) {
       console.log(chalk.gray(`  Backup saved as: ${absPath}.vue2.bak`));
     }
   }
 
   if (result.warnings.length) {
-    console.log(chalk.yellow('\n⚠ Warnings — manual review recommended:'));
+    console.log(chalk.yellow('\n[!] Warnings — manual review recommended:'));
     for (const w of result.warnings) {
       console.log(chalk.yellow(`  • ${w}`));
     }
   }
 } catch (err) {
-  console.error(chalk.red(`✖ Error: ${err.message}`));
+  console.error(chalk.red(`[ERR] Error: ${err.message}`));
   process.exit(1);
 }
 ```
 
 });
 
-// ── interactive ──────────────────────────────────────────────────────────────
+// – interactive –––––––––––––––––––––––––––––––
 program
 .command(‘interactive’)
 .alias(‘i’)
@@ -225,10 +225,10 @@ for (const file of classComponents) {
     name: 'action',
     message: 'What do you want to do?',
     choices: [
-      { name: '✔ Migrate this file', value: 'migrate' },
+      { name: '[OK] Migrate this file', value: 'migrate' },
       { name: '👁  Preview (dry run)', value: 'preview' },
-      { name: '⊘ Skip', value: 'skip' },
-      { name: '✖ Quit', value: 'quit' },
+      { name: '[-] Skip', value: 'skip' },
+      { name: '[ERR] Quit', value: 'quit' },
     ]
   }]);
 
@@ -237,9 +237,9 @@ for (const file of classComponents) {
 
   if (action === 'preview') {
     const result = processFile(file, { dryRun: true, backup: false });
-    console.log('\n' + chalk.dim('─'.repeat(60)));
+    console.log('\n' + chalk.dim('-'.repeat(60)));
     console.log(result.output);
-    console.log(chalk.dim('─'.repeat(60)) + '\n');
+    console.log(chalk.dim('-'.repeat(60)) + '\n');
 
     const { confirm } = await inquirer.prompt([{
       type: 'confirm', name: 'confirm', message: 'Apply this migration?', default: true
@@ -249,10 +249,10 @@ for (const file of classComponents) {
 
   try {
     processFile(file, { dryRun: false, backup: options.backup !== false });
-    console.log(chalk.green('  ✔ Migrated!'));
+    console.log(chalk.green('  [OK] Migrated!'));
     migrated++;
   } catch (err) {
-    console.log(chalk.red(`  ✖ Error: ${err.message}`));
+    console.log(chalk.red(`  [ERR] Error: ${err.message}`));
   }
 }
 
@@ -261,21 +261,21 @@ console.log(chalk.bold(`\nDone! Migrated: ${migrated}, Skipped: ${skipped}`));
 
 });
 
-// ── preview ───────────────────────────────────────────────────────────────────
+// – preview —————————————————————––
 program
 .command(‘preview <filepath>’)
 .description(‘Print the migrated output for a file without changing it’)
 .action((filepath) => {
 const absPath = path.resolve(filepath);
 if (!fs.existsSync(absPath)) {
-console.error(chalk.red(`✖ File not found: ${absPath}`));
+console.error(chalk.red(`[ERR] File not found: ${absPath}`));
 process.exit(1);
 }
 const source = fs.readFileSync(absPath, ‘utf-8’);
 const { output, warnings } = transformComponent(source, path.basename(absPath));
 console.log(output);
 if (warnings.length) {
-process.stderr.write(chalk.yellow(’\n⚠ Warnings:\n’ + warnings.map(w => `  • ${w}`).join(’\n’) + ‘\n’));
+process.stderr.write(chalk.yellow(’\n[!] Warnings:\n’ + warnings.map(w => `  • ${w}`).join(’\n’) + ‘\n’));
 }
 });
 
