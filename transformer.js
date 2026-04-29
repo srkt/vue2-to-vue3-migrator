@@ -28,7 +28,7 @@
 - - Method names resolved so this.method() → method()
     */
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// — Helpers ——————————————————————
 
 function indent(code, spaces = 2) {
 const pad = ’ ‘.repeat(spaces);
@@ -37,7 +37,7 @@ return code.split(’\n’).map(l => (l.trim() === ‘’ ? ‘’ : pad + l)).j
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-// ─── Block Extractors ─────────────────────────────────────────────────────────
+// — Block Extractors ———————————————————
 
 function extractScriptBlock(source) {
 const match = source.match(/<script(\s[^>]*)?>[\s\S]*?</script>/);
@@ -58,7 +58,7 @@ const matches = source.match(/<style[\s\S]*?</style>/g);
 return matches ? matches.join(’\n\n’) : ‘’;
 }
 
-// ─── Import Parser ────────────────────────────────────────────────────────────
+// — Import Parser ————————————————————
 
 function parseImports(script) {
 const importLines = [];
@@ -82,7 +82,7 @@ i++;
 return { importLines, restScript: restLines.join(’\n’) };
 }
 
-// ─── Class Body Parser ────────────────────────────────────────────────────────
+// — Class Body Parser ––––––––––––––––––––––––––––
 
 function parseClassBody(script) {
 const classMatch = script.match(/@Component[^]*?export\s+default\s+class\s+(\w+)\s+extends\s+Vue\s*{/);
@@ -104,7 +104,7 @@ idx++;
 return { className, componentOptions, classBody: script.slice(braceStart + 1, idx - 1) };
 }
 
-// ─── Member Extractors ────────────────────────────────────────────────────────
+// — Member Extractors ––––––––––––––––––––––––––––
 
 function extractProps(classBody) {
 const props = [];
@@ -348,7 +348,7 @@ mixins.push(’(detected via Mixins() helper)’);
 return mixins;
 }
 
-// ─── Breaking Change Detectors ────────────────────────────────────────────────
+// — Breaking Change Detectors ————————————————
 
 function detectBreakingChanges(classBody) {
 const issues = [];
@@ -365,13 +365,13 @@ issues.push(‘v-model: prop is now “modelValue”, event is “update:modelVa
 return issues;
 }
 
-// ─── Utilities ────────────────────────────────────────────────────────────────
+// — Utilities ––––––––––––––––––––––––––––––––
 
 function toKebabCase(str) {
 return str.replace(/([a-z])([A-Z])/g, ‘$1-$2’).toLowerCase();
 }
 
-// ─── this.X → X.value rewriter ────────────────────────────────────────────────
+// — this.X → X.value rewriter ————————————————
 
 function makeRewriter(propNames, dataNames, computedNames, templateRefNames, methodNames, refDecoratorNames) {
 return function rewrite(body) {
@@ -414,7 +414,7 @@ return out;
 };
 }
 
-// ─── Code Generators ──────────────────────────────────────────────────────────
+// — Code Generators –––––––––––––––––––––––––––––
 
 const LIFECYCLE_MAP = {
 beforeCreate: null, created: null,
@@ -556,7 +556,7 @@ return `watch(${source}, ${asyncKw}(${m.params}) => {\n${indent(body.trim(), 2)}
 }).join(’\n\n’);
 }
 
-// ─── Import Builder ───────────────────────────────────────────────────────────
+// — Import Builder ———————————————————–
 
 function buildVue3Imports({
 dataItems, computedList, watchMethods, lifecycleMethods,
@@ -602,7 +602,7 @@ lines.push(…cleaned);
 return lines.filter(Boolean).join(’\n’);
 }
 
-// ─── Main Transform ───────────────────────────────────────────────────────────
+// — Main Transform ———————————————————–
 
 function transformComponent(source, filename = ‘Component.vue’) {
 const warnings = [];
@@ -623,7 +623,7 @@ warnings.push(‘Could not detect Vue 2 class syntax — may already be Vue 3 or
 return { output: source, warnings };
 }
 
-// ── Extract everything ──────────────────────────────────────────────────────
+// – Extract everything ——————————————————
 const props          = extractProps(classBody);
 const models         = extractModel(classBody);
 const emitDecoratorMap = extractEmitDecorators(classBody);
@@ -652,7 +652,7 @@ const breakingChanges = detectBreakingChanges(classBody);
 const methodNames = new Set(allMethods.map(m => m.name));
 const rewrite = makeRewriter(propNames, dataNames, computedNames, templateRefNames, methodNames, refDecoratorNames);
 
-// ── Feature flags ───────────────────────────────────────────────────────────
+// – Feature flags ———————————————————–
 const usesNextTick = classBody.includes(’$nextTick’);
 const usesRouter   = classBody.includes(‘this.$router’);
 const usesRoute    = classBody.includes(‘this.$route’);
@@ -661,7 +661,7 @@ const usesI18n     = classBody.includes(‘this.$t(’) || classBody.includes(�
 const usesAttrs    = classBody.includes(‘this.$attrs’);
 const usesSlots    = classBody.includes(‘this.$slots’);
 
-// ── Imports ─────────────────────────────────────────────────────────────────
+// – Imports —————————————————————–
 const imports = buildVue3Imports({
 dataItems, computedList, watchMethods, lifecycleMethods,
 usesNextTick, usesRouter, usesRoute, usesStore, usesI18n,
@@ -670,7 +670,7 @@ templateRefs: […templateRefNames],
 refDecorators, provides, injects
 }, importLines);
 
-// ── Assemble script body ────────────────────────────────────────────────────
+// – Assemble script body ––––––––––––––––––––––––––
 const parts = [];
 
 const propsCode = generateProps(props, models);
@@ -732,7 +732,7 @@ let componentsDef = ‘’;
 if (componentOptions) {
 const compMatch = componentOptions.match(/components\s*:\s*({[^}]+})/);
 if (compMatch) {
-componentsDef = `// ✔ Components auto-registered in Vue 3 SFC\n// Was: ${compMatch[0]}\n`;
+componentsDef = `// [OK] Components auto-registered in Vue 3 SFC\n// Was: ${compMatch[0]}\n`;
 }
 }
 
@@ -744,8 +744,8 @@ const outputParts = [template, ‘’, scriptTag];
 if (style) outputParts.push(’’, style);
 const output = outputParts.join(’\n’).trim() + ‘\n’;
 
-// ── Warnings ────────────────────────────────────────────────────────────────
-for (const bc of breakingChanges) warnings.push(`⚠ Breaking change: ${bc}`);
+// – Warnings ––––––––––––––––––––––––––––––––
+for (const bc of breakingChanges) warnings.push(`[!] Breaking change: ${bc}`);
 if (filters.length)
 warnings.push(`Filters (${filters.join(', ')}) removed in Vue 3 — convert to computed props or methods.`);
 if (mixins.length)
